@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dinámica Orbital — Laboratorio Virtual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/SplitText.min.js"></script>
+<style>
+:root{
+  --ink:#04060f;
+  --ink2:#080d1c;
+  --surface:#0d1424;
+  --surface2:#131d30;
+  --rim:rgba(120,160,255,0.12);
+  --rim2:rgba(120,160,255,0.24);
+  --blue:#4d8aff;
+  --blue2:#89b8ff;
+  --gold:#e8a030;
+  --gold2:#ffd080;
+  --green:#2ee8a0;
+  --red:#ff4f65;
+  --amber:#ffcf44;
+  --text:#dce8ff;
+  --text2:#7a96c8;
+  --text3:#334466;
+  --cf:'Cormorant Garamond',serif;
+  --mono:'Space Mono',monospace;
+  --sans:'Outfit',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--ink);color:var(--text);font-family:var(--sans);overflow-x:hidden;cursor:none}
+
+/* ── CUSTOM CURSOR ── */
+#cursor{position:fixed;width:8px;height:8px;background:#fff;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:transform .15s ease}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(255,255,255,.3);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .3s,height .3s,border-color .3s}
+body:has(a:hover) #cursor-ring,body:has(button:hover) #cursor-ring{width:52px;height:52px;border-color:rgba(77,138,255,.6)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 48px;height:68px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(4,6,15,.95) 0%,transparent 100%);backdrop-filter:blur(2px)}
+.nav-logo{font-family:var(--cf);font-size:20px;font-weight:600;letter-spacing:.05em;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(-10px)}
+.nav-logo-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 12px var(--blue)}
+.nav-links{display:flex;align-items:center;gap:36px;opacity:0;transform:translateY(-10px)}
+.nav-link{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);text-decoration:none;transition:color .3s;position:relative}
+.nav-link::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--blue);transition:width .3s}
+.nav-link:hover{color:var(--blue2)}
+.nav-link:hover::after{width:100%}
+.nav-cta{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:var(--blue);border:none;border-radius:4px;padding:9px 20px;cursor:none;transition:background .2s,transform .15s;opacity:0}
+.nav-cta:hover{background:var(--blue2);transform:translateY(-1px)}
+
+/* ── HERO ── */
+#hero{position:relative;height:100vh;min-height:700px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+#hero-canvas{position:absolute;inset:0;width:100%;height:100%}
+.hero-content{position:relative;z-index:2;text-align:center;padding:0 24px}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--blue);margin-bottom:28px;display:flex;align-items:center;justify-content:center;gap:16px;opacity:0}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';display:block;width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--blue))}
+.hero-eyebrow::after{background:linear-gradient(270deg,transparent,var(--blue))}
+.hero-title{font-family:var(--cf);font-size:clamp(64px,10vw,130px);font-weight:300;line-height:.92;letter-spacing:-.02em;color:#fff;margin-bottom:0;overflow:hidden}
+.hero-title em{font-style:italic;color:var(--blue2)}
+.hero-title-line{overflow:hidden;display:block}
+.hero-title-inner{display:block;transform:translateY(110%)}
+.hero-sub{font-family:var(--sans);font-size:16px;font-weight:300;color:var(--text2);max-width:520px;margin:32px auto 0;line-height:1.8;opacity:0}
+.hero-sub strong{color:var(--text);font-weight:500}
+.hero-scroll{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;opacity:0}
+.scroll-txt{font-family:var(--mono);font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--text3)}
+.scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,var(--blue),transparent);animation:scrollPulse 2s ease-in-out infinite}
+@keyframes scrollPulse{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ── MARQUEE ── */
+.marquee-wrap{border-top:1px solid var(--rim);border-bottom:1px solid var(--rim);padding:18px 0;overflow:hidden;background:var(--ink2);position:relative;z-index:2}
+.marquee-inner{display:flex;gap:0;white-space:nowrap;animation:marqueeScroll 28s linear infinite}
+.marquee-item{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text3);padding:0 32px;flex-shrink:0}
+.marquee-item span{color:var(--blue);margin-right:32px}
+@keyframes marqueeScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── STATS SECTION ── */
+#stats{padding:100px 48px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rim);position:relative}
+#stats::before{content:'';position:absolute;inset:0;background:var(--ink2)}
+.stat-cell{background:var(--ink2);padding:52px 40px;position:relative;overflow:hidden;z-index:1}
+.stat-cell::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--blue),transparent);opacity:0;transition:opacity .4s}
+.stat-cell:hover::before{opacity:1}
+.stat-num{font-family:var(--cf);font-size:72px;font-weight:300;line-height:1;color:#fff;margin-bottom:8px;overflow:hidden}
+.stat-num-inner{display:block;transform:translateY(100%)}
+.stat-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text3)}
+.stat-desc{font-size:13px;color:var(--text2);margin-top:10px;line-height:1.6}
+@media(max-width:900px){#stats{grid-template-columns:repeat(2,1fr)}}
+
+/* ── LAB SECTION ── */
+#lab{padding:80px 0 100px;position:relative}
+.lab-header{padding:0 48px 60px;display:flex;align-items:flex-end;justify-content:space-between;gap:40px}
+.lab-title-wrap{max-width:600px}
+.section-tag{font-family:var(--mono);font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--blue);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.section-tag::before{content:'';display:block;width:20px;height:1px;background:var(--blue)}
+.section-h2{font-family:var(--cf);font-size:clamp(40px,6vw,80px);font-weight:300;line-height:1;color:#fff;letter-spacing:-.02em}
+.section-h2 em{font-style:italic;color:var(--blue2)}
+.lab-desc{font-size:14px;color:var(--text2);max-width:300px;line-height:1.8}
+
+/* ── SIM LAYOUT ── */
+.sim-layout{display:grid;grid-template-columns:1fr 360px;gap:0;border-top:1px solid var(--rim)}
+@media(max-width:1024px){.sim-layout{grid-template-columns:1fr}}
+.sim-main{border-right:1px solid var(--rim)}
+.sim-canvas-wrap{position:relative;border-bottom:1px solid var(--rim)}
+canvas#orbitCanvas{display:block;width:100%;background:transparent}
+.canvas-hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:20px}
+.hud-top{display:flex;justify-content:space-between;align-items:flex-start}
+.hud-bottom{display:flex;justify-content:space-between;align-items:flex-end}
+.hud-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(4,6,15,.82);border:1px solid var(--rim);backdrop-filter:blur(10px);border-radius:3px;padding:5px 12px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.hud-chip .v{color:var(--text);font-weight:700}
+.hud-orbit-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(4,6,15,.88);border:1px solid var(--rim2);backdrop-filter:blur(14px);border-radius:3px;padding:10px 16px;font-family:var(--sans);font-size:13px;font-weight:500;letter-spacing:.02em}
+.hud-dot{width:7px;height:7px;border-radius:50%}
+.hud-verlet{font-family:var(--mono);font-size:9px;color:var(--text3);display:flex;gap:12px;flex-wrap:wrap}
+.hud-verlet span{color:var(--blue2)}
+
+/* ── METRICS STRIP ── */
+.metrics-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rim);border-bottom:1px solid var(--rim)}
+.metric-box{background:var(--ink2);padding:22px 24px;position:relative;overflow:hidden}
+.metric-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--blue);transform:scaleX(0);transform-origin:left;transition:transform .5s ease}
+.metric-box.active::after{transform:scaleX(1)}
+.mb-lbl{font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.mb-val{font-family:var(--cf);font-size:36px;font-weight:300;color:#fff;line-height:1;will-change:contents}
+.mb-val.neg{color:var(--green)}
+.mb-val.pos{color:var(--red)}
+.mb-unit{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px}
+
+/* ── CONTROLS PANEL ── */
+.controls-panel{background:var(--surface)}
+.cp-section{padding:24px 28px;border-bottom:1px solid var(--rim)}
+.cp-label{font-family:var(--mono);font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--text3);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.cp-label::after{content:'';flex:1;height:1px;background:var(--rim)}
+
+/* Sliders */
+.slider-row{margin-bottom:18px}
+.slider-row:last-child{margin-bottom:0}
+.sl-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.sl-name{font-size:12px;color:var(--text2);font-weight:400}
+.sl-val{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue2);background:rgba(77,138,255,.1);border:1px solid rgba(77,138,255,.2);border-radius:3px;padding:2px 8px;min-width:42px;text-align:center}
+.sl-hint{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:5px;font-style:italic}
+input[type=range]{-webkit-appearance:none;width:100%;height:2px;background:var(--surface2);border-radius:1px;outline:none;cursor:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--blue);box-shadow:0 0 12px rgba(77,138,255,.6);cursor:none;transition:transform .2s,box-shadow .2s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.3);box-shadow:0 0 20px rgba(77,138,255,.9)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--blue);cursor:none}
+
+/* Presets */
+.presets-list{display:flex;flex-direction:column;gap:6px}
+.pre-row{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface2);border:1px solid transparent;border-radius:4px;cursor:none;transition:border-color .2s,background .2s;text-align:left;width:100%}
+.pre-row:hover{border-color:var(--rim2);background:#1c2840}
+.pre-row.on{border-color:var(--blue);background:rgba(77,138,255,.08)}
+.pre-row-ico{font-size:14px;flex-shrink:0;width:18px}
+.pre-row-info{flex:1}
+.pre-row-name{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--text);line-height:1}
+.pre-row-cond{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px}
+.pre-row-eps{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text3);flex-shrink:0}
+.pre-row.on .pre-row-eps{color:var(--blue)}
+
+/* Orbit guide dots */
+.orbit-indicators{display:flex;flex-direction:column;gap:3px}
+.oi-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:3px;border:1px solid transparent;transition:all .3s}
+.oi-row.lit{background:rgba(77,138,255,.05);border-color:var(--rim)}
+.oi-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;transition:box-shadow .3s}
+.oi-row.lit .oi-dot{box-shadow:0 0 8px currentColor}
+.oi-name{font-family:var(--sans);font-size:11px;font-weight:500;color:var(--text2)}
+.oi-row.lit .oi-name{color:var(--text)}
+.oi-cond{font-family:var(--mono);font-size:8px;color:var(--text3);margin-left:auto}
+
+/* Speed + reset */
+.speed-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:14px}
+.spd{height:30px;background:var(--surface2);border:1px solid var(--rim);border-radius:3px;color:var(--text3);font-family:var(--mono);font-size:9px;letter-spacing:.05em;cursor:none;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.spd:hover{border-color:var(--rim2);color:var(--text)}
+.spd.on{background:rgba(77,138,255,.15);border-color:var(--blue);color:var(--blue2);box-shadow:0 0 12px rgba(77,138,255,.2)}
+.reset-btn{width:100%;padding:11px;background:transparent;border:1px solid var(--rim2);border-radius:3px;color:var(--text2);font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;cursor:none;transition:all .25s;position:relative;overflow:hidden}
+.reset-btn::before{content:'';position:absolute;inset:0;background:var(--blue);transform:translateX(-100%);transition:transform .3s ease}
+.reset-btn:hover{color:#fff;border-color:var(--blue)}
+.reset-btn:hover::before{transform:translateX(0)}
+.reset-btn span{position:relative;z-index:1}
+
+/* Edu panel */
+.edu-panel{padding:24px 28px}
+.edu-type-title{font-family:var(--cf);font-size:22px;font-weight:400;margin-bottom:10px;line-height:1.2}
+.edu-body-txt{font-size:12px;color:var(--text2);line-height:1.8;margin-bottom:14px}
+.edu-formula-block{background:var(--ink2);border-left:2px solid var(--blue);border-radius:0 3px 3px 0;padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--blue2);letter-spacing:.04em;margin-bottom:14px}
+.edu-cond{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em}
+.edu-panel{transition:opacity .25s,transform .25s}
+.edu-panel.fading{opacity:0;transform:translateY(6px)}
+
+/* ── THEORY SECTION ── */
+#theory{padding:120px 48px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;border-top:1px solid var(--rim)}
+.theory-left .section-h2{margin-bottom:32px}
+.theory-formula-stack{display:flex;flex-direction:column;gap:12px}
+.tf{padding:18px 22px;background:var(--surface);border:1px solid var(--rim);border-radius:4px;position:relative;overflow:hidden}
+.tf::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--blue),transparent)}
+.tf-eq{font-family:var(--mono);font-size:12px;color:var(--blue2);letter-spacing:.04em;margin-bottom:6px}
+.tf-desc{font-size:11px;color:var(--text3);line-height:1.5}
+.theory-right{}
+.orbit-types-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ot-card{padding:20px 20px 18px;background:var(--surface);border:1px solid var(--rim);border-radius:4px;position:relative;overflow:hidden;transition:border-color .3s,transform .3s}
+.ot-card:hover{border-color:var(--rim2);transform:translateY(-3px)}
+.ot-icon{font-size:22px;margin-bottom:10px}
+.ot-name{font-family:var(--cf);font-size:18px;font-weight:400;color:#fff;margin-bottom:4px}
+.ot-range{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.1em}
+.ot-bar{position:absolute;bottom:0;left:0;height:2px;background:var(--blue);width:0;transition:width .5s ease}
+.ot-card:hover .ot-bar{width:100%}
+@media(max-width:900px){#theory{grid-template-columns:1fr}#stats{grid-template-columns:1fr 1fr}}
+
+/* ── TEAM FOOTER ── */
+footer{padding:60px 48px;border-top:1px solid var(--rim);display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center}
+.foot-left{}
+.foot-brand{font-family:var(--cf);font-size:28px;font-weight:300;color:#fff;margin-bottom:6px}
+.foot-sub{font-size:12px;color:var(--text3);line-height:1.6}
+.foot-team{display:flex;gap:8px;flex-wrap:wrap}
+.team-card{padding:8px 16px;background:var(--surface);border:1px solid var(--rim);border-radius:3px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
+@media(max-width:600px){footer{grid-template-columns:1fr}.foot-team{justify-content:center}}
+
+/* ── GLOSSARY ── */
+.glossary-wrap{border-top:1px solid var(--rim);background:var(--ink2)}
+.glossary-header{padding:28px 28px 0}
+.glossary-intro{font-size:13px;color:var(--text3);margin-top:6px;line-height:1.6}
+.glossary-filters{display:flex;gap:6px;padding:18px 28px;border-bottom:1px solid var(--rim);flex-wrap:wrap}
+.gf-btn{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:6px 14px;background:transparent;border:1px solid var(--rim);border-radius:2px;color:var(--text3);cursor:none;transition:all .2s}
+.gf-btn:hover{color:var(--text2);border-color:var(--rim2)}
+.gf-btn.on{background:rgba(77,138,255,.1);border-color:var(--blue);color:var(--blue2)}
+.glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--rim)}
+@media(max-width:1200px){.glossary-grid{grid-template-columns:1fr}}
+.g-card{background:var(--ink2);padding:22px 24px;position:relative;overflow:hidden;transition:background .25s;cursor:default}
+.g-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--c,var(--blue));opacity:0;transition:opacity .3s}
+.g-card:hover{background:var(--surface)}
+.g-card:hover::before{opacity:1}
+.g-card.hidden{display:none}
+.g-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.g-symbol{font-family:var(--cf);font-size:22px;font-weight:300;color:var(--text2);line-height:1}
+.g-tag{font-family:var(--mono);font-size:8px;letter-spacing:.15em;text-transform:uppercase;padding:3px 8px;background:rgba(77,138,255,.08);border:1px solid rgba(77,138,255,.18);border-radius:2px;color:var(--blue2)}
+.g-term{font-family:var(--cf);font-size:18px;font-weight:400;color:#fff;line-height:1;margin-bottom:8px}
+.g-def{font-size:12px;color:var(--text2);line-height:1.75;margin-bottom:10px}
+.g-def em{color:var(--text);font-style:normal;font-weight:500}
+.g-formula{font-family:var(--mono);font-size:9px;color:var(--blue2);background:rgba(77,138,255,.06);border-left:1px solid rgba(77,138,255,.3);padding:6px 10px;letter-spacing:.04em;border-radius:0 2px 2px 0}
+
+/* ── STATUS OVERLAY ── */
+#status-overlay{position:absolute;inset:0;pointer-events:none;opacity:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:28px;z-index:10}
+#status-msg{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:8px 18px;border-radius:3px;background:rgba(4,6,15,.9);border:1px solid rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a href="#" class="nav-logo" id="navLogo">
+    <span class="nav-logo-dot"></span>
+    Mecánica Orbital
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a href="#lab" class="nav-link">Simulador</a>
+    <a href="#theory" class="nav-link">Teoría</a>
+    <a href="#stats" class="nav-link">Parámetros</a>
+  </div>
+  <button class="nav-cta" id="navCta" onclick="document.getElementById('lab').scrollIntoView({behavior:'smooth'})">Explorar →</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-eyebrow" id="heroEyebrow">Laboratorio Virtual · Física Mecánica</div>
+    <h1 class="hero-title" id="heroTitle">
+      <span class="hero-title-line"><span class="hero-title-inner">Dinámica</span></span>
+      <span class="hero-title-line"><span class="hero-title-inner"><em>Orbital</em></span></span>
+    </h1>
+    <p class="hero-sub" id="heroSub">
+      Simulación en tiempo real de trayectorias gravitacionales usando <strong>integración numérica Velocity Verlet</strong>. Explora los cinco tipos de órbita predichos por la mecánica clásica de Mahecha.
+    </p>
+  </div>
+  <div class="hero-scroll" id="heroScroll">
+    <span class="scroll-txt">Desplázate</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-inner" id="marqueeInner">
+    <span class="marquee-item"><span>01</span> Órbita Circular</span>
+    <span class="marquee-item"><span>02</span> Órbita Elíptica</span>
+    <span class="marquee-item"><span>03</span> Trayectoria Parabólica</span>
+    <span class="marquee-item"><span>04</span> Trayectoria Hiperbólica</span>
+    <span class="marquee-item"><span>05</span> Colisión Directa</span>
+    <span class="marquee-item"><span>—</span> Velocity Verlet</span>
+    <span class="marquee-item"><span>—</span> Conservación de Energía</span>
+    <span class="marquee-item"><span>—</span> Momento Angular</span>
+    <span class="marquee-item"><span>—</span> Mahecha · Mecánica Clásica</span>
+    <span class="marquee-item"><span>01</span> Órbita Circular</span>
+    <span class="marquee-item"><span>02</span> Órbita Elíptica</span>
+    <span class="marquee-item"><span>03</span> Trayectoria Parabólica</span>
+    <span class="marquee-item"><span>04</span> Trayectoria Hiperbólica</span>
+    <span class="marquee-item"><span>05</span> Colisión Directa</span>
+    <span class="marquee-item"><span>—</span> Velocity Verlet</span>
+    <span class="marquee-item"><span>—</span> Conservación de Energía</span>
+    <span class="marquee-item"><span>—</span> Momento Angular</span>
+    <span class="marquee-item"><span>—</span> Mahecha · Mecánica Clásica</span>
+  </div>
+</div>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="stat-cell">
+    <div class="stat-num"><span class="stat-num-inner" id="sn1">5</span></div>
+    <div class="stat-lbl">Tipos de trayectoria</div>
+    <div class="stat-desc">Circular, elíptica, parabólica, hiperbólica y colisión — todas derivadas de un solo parámetro: la energía.</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num"><span class="stat-num-inner" id="sn2">∞</span></div>
+    <div class="stat-lbl">Conservación de L</div>
+    <div class="stat-desc">El momento angular se conserva exactamente a lo largo de toda la simulación gracias al integrador Verlet.</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num"><span class="stat-num-inner" id="sn3">0.05</span></div>
+    <div class="stat-lbl">Paso de integración dt</div>
+    <div class="stat-desc">Paso temporal del integrador Velocity Verlet, segundo orden en posición y velocidad. Error O(dt⁴).</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-num"><span class="stat-num-inner" id="sn4">768k</span></div>
+    <div class="stat-lbl">Constante GM</div>
+    <div class="stat-desc">Producto de la constante gravitacional y la masa del planeta central. Escala interna del laboratorio.</div>
+  </div>
+</section>
+
+<!-- LAB -->
+<section id="lab">
+  <div class="lab-header">
+    <div class="lab-title-wrap">
+      <div class="section-tag">Laboratorio</div>
+      <h2 class="section-h2">Simulador<br><em>interactivo</em></h2>
+    </div>
+    <p class="lab-desc">Ajusta las condiciones iniciales en tiempo real y observa cómo la energía y el momento angular determinan la forma de la trayectoria.</p>
+  </div>
+
+  <div class="sim-layout">
+    <!-- MAIN SIM -->
+    <div class="sim-main">
+      <div class="sim-canvas-wrap" id="simCanvasWrap">
+        <canvas id="orbitCanvas"></canvas>
+        <div class="canvas-hud">
+          <div class="hud-top">
+            <div style="display:flex;gap:6px;flex-direction:column">
+              <div class="hud-chip">GM = <span class="v">768 000</span></div>
+              <div class="hud-chip">Δt = <span class="v">0.05</span></div>
+            </div>
+            <div class="hud-orbit-badge" id="badge">
+              <div class="hud-dot" id="badge-dot" style="background:#4d8aff;box-shadow:0 0 10px #4d8aff"></div>
+              <span id="badge-lbl">Inicializando…</span>
+            </div>
+          </div>
+          <div class="hud-bottom">
+            <div class="hud-verlet">
+              <span>r(t+dt) = r + <span>v·dt</span> + ½<span>a·dt²</span></span>
+              <span>v(t+dt) = v + ½<span>[a+a']</span>·dt</span>
+            </div>
+          </div>
+        </div>
+        <div id="status-overlay">
+          <div id="status-msg"></div>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="metrics-strip">
+        <div class="metric-box" id="mbox-e">
+          <div class="mb-lbl">Energía total E</div>
+          <div class="mb-val" id="m-e">—</div>
+          <div class="mb-unit">Ec. 5.86 Mahecha</div>
+        </div>
+        <div class="metric-box" id="mbox-eps">
+          <div class="mb-lbl">Excentricidad ε</div>
+          <div class="mb-val" id="m-eps">—</div>
+          <div class="mb-unit">Ec. 5.89 Mahecha</div>
+        </div>
+        <div class="metric-box" id="mbox-l">
+          <div class="mb-lbl">Momento angular L</div>
+          <div class="mb-val" id="m-l">—</div>
+          <div class="mb-unit">r × mv — conservado</div>
+        </div>
+      </div>
+
+      <!-- GLOSSARY -->
+      <div class="glossary-wrap" id="glossaryWrap">
+        <div class="glossary-header">
+          <div class="cp-label" style="margin-bottom:0">Glosario del simulador</div>
+          <p class="glossary-intro">Todo lo que ves en pantalla, explicado sin tecnicismos.</p>
+        </div>
+
+        <div class="glossary-filters" id="glossaryFilters">
+          <button class="gf-btn on" data-cat="all">Todos</button>
+          <button class="gf-btn" data-cat="variables">Variables</button>
+          <button class="gf-btn" data-cat="orbits">Tipos de órbita</button>
+          <button class="gf-btn" data-cat="physics">Física</button>
+        </div>
+
+        <div class="glossary-grid" id="glossaryGrid">
+
+          <!-- VARIABLES -->
+          <div class="g-card" data-cat="variables">
+            <div class="g-card-top">
+              <div class="g-symbol">E</div>
+              <div class="g-tag">Variable</div>
+            </div>
+            <div class="g-term">Energía total</div>
+            <div class="g-def">Imagina que E es como el "saldo en cuenta" del satélite. Si es <em>negativo</em> (E&nbsp;&lt;&nbsp;0), el satélite está "en deuda" con la gravedad y no puede escapar: orbita para siempre. Si es <em>positivo o cero</em>, tiene energía de sobra y se aleja sin volver.</div>
+            <div class="g-formula">E = ½mv² − GMm/r</div>
+          </div>
+
+          <div class="g-card" data-cat="variables">
+            <div class="g-card-top">
+              <div class="g-symbol">ε</div>
+              <div class="g-tag">Variable</div>
+            </div>
+            <div class="g-term">Excentricidad</div>
+            <div class="g-def">Un número que dice qué tan "aplastado" está el camino. <em>0</em> = círculo perfecto. <em>Entre 0 y 1</em> = óvalo (elipse). <em>1</em> = el límite exacto del escape. <em>Mayor que 1</em> = el objeto pasa y se va para siempre.</div>
+            <div class="g-formula">ε = √(1 + 2EL²/G²M²m³)</div>
+          </div>
+
+          <div class="g-card" data-cat="variables">
+            <div class="g-card-top">
+              <div class="g-symbol">L</div>
+              <div class="g-tag">Variable</div>
+            </div>
+            <div class="g-term">Momento angular</div>
+            <div class="g-def">Mide cuánto "giro" lleva el satélite. Piénsalo como la inercia de un trompo: mientras más rápido gire y más lejos esté del centro, más difícil es pararlo. Si L es muy pequeño, el satélite casi no gira y cae directamente al planeta.</div>
+            <div class="g-formula">L = r × mv = constante</div>
+          </div>
+
+          <div class="g-card" data-cat="variables">
+            <div class="g-card-top">
+              <div class="g-symbol">v<sub>θ</sub></div>
+              <div class="g-tag">Slider</div>
+            </div>
+            <div class="g-term">Velocidad tangencial</div>
+            <div class="g-def">La velocidad "lateral" del satélite — la que lo hace girar alrededor del planeta en vez de caer hacia él. Cuando la ajustas al valor exacto (~80), obtienes un círculo. Más lenta da elipse; demasiado rápida y escapa.</div>
+            <div class="g-formula">v_circ = √(GM / r₀)</div>
+          </div>
+
+          <div class="g-card" data-cat="variables">
+            <div class="g-card-top">
+              <div class="g-symbol">v<sub>r</sub></div>
+              <div class="g-tag">Slider</div>
+            </div>
+            <div class="g-term">Velocidad radial</div>
+            <div class="g-def">La velocidad "hacia adentro o hacia afuera". Si es positiva, el satélite arranca alejándose del planeta. Si es negativa, arranca acercándose. En una órbita circular perfecta, esta velocidad es cero todo el tiempo.</div>
+            <div class="g-formula">v_r = dr/dt</div>
+          </div>
+
+          <div class="g-card" data-cat="variables">
+            <div class="g-card-top">
+              <div class="g-symbol">r₀</div>
+              <div class="g-tag">Slider</div>
+            </div>
+            <div class="g-term">Distancia inicial</div>
+            <div class="g-def">La distancia de partida entre el satélite y el centro del planeta. Mientras más lejos empiece, más lenta necesita ir para orbitar (la gravedad es más débil). Afecta directamente la velocidad circular de equilibrio.</div>
+            <div class="g-formula">v_circ(r₀) = √(GM / r₀)</div>
+          </div>
+
+          <!-- ORBIT TYPES -->
+          <div class="g-card" data-cat="orbits" style="--c:#60a5fa">
+            <div class="g-card-top">
+              <div class="g-symbol" style="color:#60a5fa">⬤</div>
+              <div class="g-tag" style="background:rgba(96,165,250,.12);color:#60a5fa;border-color:rgba(96,165,250,.25)">Órbita</div>
+            </div>
+            <div class="g-term">Circular</div>
+            <div class="g-def">El satélite mantiene siempre la misma distancia al planeta. Requiere una velocidad exacta: ni muy rápida ni muy lenta. Los satélites de comunicaciones como los geoestacionarios usan este tipo de órbita.</div>
+            <div class="g-formula">ε = 0 · E &lt; 0</div>
+          </div>
+
+          <div class="g-card" data-cat="orbits" style="--c:#2ee8a0">
+            <div class="g-card-top">
+              <div class="g-symbol" style="color:#2ee8a0">⬭</div>
+              <div class="g-tag" style="background:rgba(46,232,160,.12);color:#2ee8a0;border-color:rgba(46,232,160,.25)">Órbita</div>
+            </div>
+            <div class="g-term">Elíptica</div>
+            <div class="g-def">El camino es un óvalo: el satélite se acerca (periapsis) y se aleja (apoapsis) alternadamente. La órbita de la Luna alrededor de la Tierra es elíptica. La de la Tierra alrededor del Sol también, aunque casi circular.</div>
+            <div class="g-formula">0 &lt; ε &lt; 1 · E &lt; 0</div>
+          </div>
+
+          <div class="g-card" data-cat="orbits" style="--c:#ffcf44">
+            <div class="g-card-top">
+              <div class="g-symbol" style="color:#ffcf44">◠</div>
+              <div class="g-tag" style="background:rgba(255,207,68,.12);color:#ffcf44;border-color:rgba(255,207,68,.25)">Órbita</div>
+            </div>
+            <div class="g-term">Parabólica</div>
+            <div class="g-def">El caso límite exacto entre quedarse atrapado y escapar. El satélite llega al infinito con velocidad cero — matemáticamente perfecto pero físicamente imposible de lograr con precisión. Es la frontera entre ligado y libre.</div>
+            <div class="g-formula">ε = 1 · E = 0</div>
+          </div>
+
+          <div class="g-card" data-cat="orbits" style="--c:#ff4f65">
+            <div class="g-card-top">
+              <div class="g-symbol" style="color:#ff4f65">↗</div>
+              <div class="g-tag" style="background:rgba(255,79,101,.12);color:#ff4f65;border-color:rgba(255,79,101,.25)">Órbita</div>
+            </div>
+            <div class="g-term">Hiperbólica</div>
+            <div class="g-def">El satélite tiene más velocidad que la de escape: la gravedad lo curva pero no lo puede atrapar. Llega y se va para siempre. Las sondas Voyager 1 y 2 tienen trayectorias hiperbólicas respecto al Sol.</div>
+            <div class="g-formula">ε &gt; 1 · E &gt; 0</div>
+          </div>
+
+          <!-- PHYSICS -->
+          <div class="g-card" data-cat="physics">
+            <div class="g-card-top">
+              <div class="g-symbol" style="font-size:13px;letter-spacing:-.02em">V·V</div>
+              <div class="g-tag">Método</div>
+            </div>
+            <div class="g-term">Velocity Verlet</div>
+            <div class="g-def">El "motor" matemático del simulador. En vez de usar una fórmula directa (que no existe para este problema), calcula la posición del satélite paso a paso en el tiempo. Su ventaja: conserva la energía casi perfectamente, por eso las órbitas no se espiralizan solas.</div>
+            <div class="g-formula">x(t+dt) = x + v·dt + ½a·dt²</div>
+          </div>
+
+          <div class="g-card" data-cat="physics">
+            <div class="g-card-top">
+              <div class="g-symbol">GM</div>
+              <div class="g-tag">Constante</div>
+            </div>
+            <div class="g-term">Parámetro gravitacional</div>
+            <div class="g-def">El "peso" del planeta multiplicado por la constante de gravedad. En este simulador vale 768&nbsp;000 (unidades internas). En la realidad, para el Sol es 1.33 × 10²⁰ m³/s². Cuanto mayor sea este valor, más fuerte jala el planeta y más rápido hay que ir para orbitar.</div>
+            <div class="g-formula">GM = 768 000 (lab)</div>
+          </div>
+
+          <div class="g-card" data-cat="physics">
+            <div class="g-card-top">
+              <div class="g-symbol" style="font-size:11px">F=ma</div>
+              <div class="g-tag">Ley</div>
+            </div>
+            <div class="g-term">Fuerza central</div>
+            <div class="g-def">La gravedad siempre jala el satélite directamente hacia el planeta, sin importar dónde esté. Eso es una fuerza central. Esta propiedad es la que garantiza que el momento angular se conserve: nunca hay un "tirón lateral" que cambie el giro.</div>
+            <div class="g-formula">F = −GM/r² · r̂</div>
+          </div>
+
+          <div class="g-card" data-cat="physics">
+            <div class="g-card-top">
+              <div class="g-symbol" style="font-size:11px">2→∞</div>
+              <div class="g-tag">Problema</div>
+            </div>
+            <div class="g-term">Dos cuerpos</div>
+            <div class="g-def">Este simulador solo tiene dos objetos: el planeta y el satélite. Con dos cuerpos, las ecuaciones tienen solución exacta — siempre serán cónicas (círculos, elipses, parábolas, hipérbolas). Con tres o más cuerpos, el movimiento puede volverse caótico e impredecible.</div>
+            <div class="g-formula">N=2 → solución analítica</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-panel">
+      <div class="cp-section">
+        <div class="cp-label">Condiciones iniciales</div>
+        <div class="slider-row">
+          <div class="sl-top">
+            <span class="sl-name">Velocidad tangencial v<sub>θ</sub></span>
+            <div class="sl-val" id="lbl-vx">80</div>
+          </div>
+          <input type="range" id="sl-vx" min="0" max="200" step="1" value="80">
+          <div class="sl-hint">v_circ = √(GM/r₀) ≈ 80</div>
+        </div>
+        <div class="slider-row">
+          <div class="sl-top">
+            <span class="sl-name">Velocidad radial v<sub>r</sub></span>
+            <div class="sl-val" id="lbl-vy">0</div>
+          </div>
+          <input type="range" id="sl-vy" min="-80" max="80" step="1" value="0">
+          <div class="sl-hint">componente radial hacia/desde el centro</div>
+        </div>
+        <div class="slider-row">
+          <div class="sl-top">
+            <span class="sl-name">Distancia inicial r₀</span>
+            <div class="sl-val" id="lbl-r">120</div>
+          </div>
+          <input type="range" id="sl-r" min="60" max="180" step="2" value="120">
+          <div class="sl-hint">posición inicial del satélite</div>
+        </div>
+      </div>
+
+      <div class="cp-section">
+        <div class="cp-label">Velocidad de simulación</div>
+        <div class="speed-grid">
+          <button class="spd" data-s="1" onclick="setSpeed(1)">1×</button>
+          <button class="spd on" data-s="3" onclick="setSpeed(3)">3×</button>
+          <button class="spd" data-s="5" onclick="setSpeed(5)">5×</button>
+          <button class="spd" data-s="8" onclick="setSpeed(8)">8×</button>
+        </div>
+        <button class="reset-btn" id="resetBtn" onclick="resetSim()"><span>↺ Reiniciar simulación</span></button>
+      </div>
+
+      <div class="cp-section">
+        <div class="cp-label">Presets de órbita</div>
+        <div class="presets-list">
+          <button class="pre-row" id="pre-circle" onclick="setPreset('circle')"><span class="pre-row-ico">⬤</span><div class="pre-row-info"><div class="pre-row-name">Circular</div><div class="pre-row-cond">v = v_circ exacta</div></div><span class="pre-row-eps">ε ≈ 0</span></button>
+          <button class="pre-row" id="pre-ellipse" onclick="setPreset('ellipse')"><span class="pre-row-ico">⬭</span><div class="pre-row-info"><div class="pre-row-name">Elíptica</div><div class="pre-row-cond">v &lt; v_circ</div></div><span class="pre-row-eps">0&lt;ε&lt;1</span></button>
+          <button class="pre-row" id="pre-para" onclick="setPreset('para')"><span class="pre-row-ico">◠</span><div class="pre-row-info"><div class="pre-row-name">Parabólica</div><div class="pre-row-cond">v = v_escape</div></div><span class="pre-row-eps">ε ≈ 1</span></button>
+          <button class="pre-row" id="pre-hyper" onclick="setPreset('hyper')"><span class="pre-row-ico">↗</span><div class="pre-row-info"><div class="pre-row-name">Hiperbólica</div><div class="pre-row-cond">v &gt; v_escape</div></div><span class="pre-row-eps">ε &gt; 1</span></button>
+          <button class="pre-row" id="pre-crash" onclick="setPreset('crash')"><span class="pre-row-ico">💥</span><div class="pre-row-info"><div class="pre-row-name">Colisión</div><div class="pre-row-cond">L → 0</div></div><span class="pre-row-eps">impacto</span></button>
+        </div>
+      </div>
+
+      <div class="cp-section">
+        <div class="cp-label">Tipo actual</div>
+        <div class="orbit-indicators">
+          <div class="oi-row" id="oi-circle"><div class="oi-dot" style="color:#60a5fa;background:#60a5fa"></div><span class="oi-name">Circular</span><span class="oi-cond">ε &lt; 0.04</span></div>
+          <div class="oi-row" id="oi-ellipse"><div class="oi-dot" style="color:#2ee8a0;background:#2ee8a0"></div><span class="oi-name">Elíptica</span><span class="oi-cond">0.04 ≤ ε &lt; 1</span></div>
+          <div class="oi-row" id="oi-para"><div class="oi-dot" style="color:#ffcf44;background:#ffcf44"></div><span class="oi-name">Parabólica</span><span class="oi-cond">ε ≈ 1, E ≈ 0</span></div>
+          <div class="oi-row" id="oi-hyper"><div class="oi-dot" style="color:#ff4f65;background:#ff4f65"></div><span class="oi-name">Hiperbólica</span><span class="oi-cond">ε &gt; 1</span></div>
+        </div>
+      </div>
+
+      <div class="edu-panel" id="edu-body">
+        <div class="cp-label" style="margin-bottom:16px">Explicación</div>
+        <div class="edu-type-title" id="edu-title" style="color:var(--text2)">Selecciona un preset</div>
+        <div class="edu-body-txt" id="edu-txt">Usa los sliders o los botones de preset para explorar los cinco tipos de trayectoria gravitacional.</div>
+        <div class="edu-formula-block" id="edu-formula">F = −GM/r²</div>
+        <div class="edu-cond" id="edu-cond">Mahecha, Ec. 5.84 – 5.90</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THEORY -->
+<section id="theory">
+  <div class="theory-left">
+    <div class="section-tag">Fundamento físico</div>
+    <h2 class="section-h2">Las <em>ecuaciones</em><br>del movimiento</h2>
+    <p style="font-size:14px;color:var(--text2);line-height:1.9;margin-bottom:40px">El integrador Velocity Verlet es de segundo orden. Conserva exactamente la simetría del Hamiltoniano y garantiza que la energía total oscile alrededor de su valor inicial sin deriva secular.</p>
+    <div class="theory-formula-stack">
+      <div class="tf"><div class="tf-eq">r(t+dt) = r(t) + v(t)·dt + ½·a(t)·dt²</div><div class="tf-desc">Posición actualizada al segundo orden en dt.</div></div>
+      <div class="tf"><div class="tf-eq">v(t+dt) = v(t) + ½·[a(t) + a(t+dt)]·dt</div><div class="tf-desc">Velocidad promediada entre aceleraciones anterior y nueva.</div></div>
+      <div class="tf"><div class="tf-eq">E = ½mv² − GMm/r = constante</div><div class="tf-desc">Energía mecánica total conservada en órbitas ligadas.</div></div>
+      <div class="tf"><div class="tf-eq">ε = √(1 + 2EL²/G²M²m³)</div><div class="tf-desc">Excentricidad — clasifica la cónica de la trayectoria.</div></div>
+    </div>
+  </div>
+  <div class="theory-right">
+    <div class="section-tag" style="margin-bottom:24px">Clasificación de cónicas</div>
+    <div class="orbit-types-grid">
+      <div class="ot-card"><div class="ot-icon">⬤</div><div class="ot-name">Circular</div><div class="ot-range">ε = 0 · E &lt; 0</div><div class="ot-bar" style="background:#60a5fa"></div></div>
+      <div class="ot-card"><div class="ot-icon">⬭</div><div class="ot-name">Elíptica</div><div class="ot-range">0 &lt; ε &lt; 1 · E &lt; 0</div><div class="ot-bar" style="background:#2ee8a0"></div></div>
+      <div class="ot-card"><div class="ot-icon">◠</div><div class="ot-name">Parabólica</div><div class="ot-range">ε = 1 · E = 0</div><div class="ot-bar" style="background:#ffcf44"></div></div>
+      <div class="ot-card"><div class="ot-icon">↗</div><div class="ot-name">Hiperbólica</div><div class="ot-range">ε &gt; 1 · E &gt; 0</div><div class="ot-bar" style="background:#ff4f65"></div></div>
+    </div>
+    <div style="margin-top:20px;padding:24px;background:var(--surface);border:1px solid var(--rim);border-radius:4px">
+      <div style="font-family:var(--mono);font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:14px">Primera ley de Kepler</div>
+      <p style="font-family:var(--cf);font-size:18px;font-weight:300;color:var(--text2);line-height:1.7;font-style:italic">"Los planetas recorren órbitas elípticas con el Sol en uno de los focos."</p>
+      <p style="font-size:12px;color:var(--text3);margin-top:10px">— Isaac Newton, <em>Principia Mathematica</em>, 1687</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-left">
+    <div class="foot-brand">Dinámica Orbital</div>
+    <div class="foot-sub">Laboratorio Virtual · Mecánica Clásica Avanzada, Mahecha Gómez<br>Integración Velocity Verlet · Física Mecánica</div>
+  </div>
+  <div class="foot-team">
+    <div class="team-card">K. Castro</div>
+    <div class="team-card">J.S. Munera</div>
+    <div class="team-card">O. Támara</div>
+    <div class="team-card">F. Arango</div>
+  </div>
+</footer>
+
+<script>
+/* ── CURSOR ── */
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=window.innerWidth/2,my=window.innerHeight/2,rx=mx,ry=my;
+window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;gsap.to(cur,{x:mx,y:my,duration:0.08,ease:'none'})});
+(function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;gsap.set(ring,{x:rx,y:ry});requestAnimationFrame(animRing)})();
+
+/* ── HERO PARTICLE CANVAS ── */
+(function(){
+  const hc=document.getElementById('hero-canvas'),hx=hc.getContext('2d');
+  function resizeHero(){hc.width=hc.parentElement.clientWidth;hc.height=hc.parentElement.clientHeight}
+  resizeHero();window.addEventListener('resize',resizeHero);
+  const orbits=[
+    {r:100,speed:.0008,phase:0,size:2,alpha:.6,color:'rgba(77,138,255,'},
+    {r:160,speed:.0005,phase:1.2,size:1.5,alpha:.4,color:'rgba(137,184,255,'},
+    {r:220,speed:.0003,phase:2.4,size:2.5,alpha:.5,color:'rgba(77,138,255,'},
+    {r:290,speed:.00018,phase:0.8,size:1.5,alpha:.3,color:'rgba(46,232,160,'},
+    {r:360,speed:.00012,phase:3.1,size:2,alpha:.35,color:'rgba(255,207,68,'},
+    {r:430,speed:.00008,phase:1.7,size:1.5,alpha:.25,color:'rgba(77,138,255,'},
+  ];
+  const stars2=Array.from({length:220},(_,i)=>({x:(Math.sin(i*137.508)*.5+.5),y:(Math.cos(i*97.321)*.5+.5),r:i%7===0?1.3:i%3===0?.8:.4,a:.1+.5*((i*.41)%1)}));
+  let t=0;
+  function drawHero(){
+    const W=hc.width,H=hc.height,cx=W/2,cy=H/2;
+    hx.clearRect(0,0,W,H);
+    /* bg glow */
+    const bg=hx.createRadialGradient(cx,cy*.7,0,cx,cy*.7,W*.55);
+    bg.addColorStop(0,'rgba(15,28,70,.7)');bg.addColorStop(.6,'rgba(8,14,30,.5)');bg.addColorStop(1,'rgba(4,6,15,0)');
+    hx.fillStyle=bg;hx.fillRect(0,0,W,H);
+    /* stars */
+    stars2.forEach(s=>{hx.beginPath();hx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);hx.fillStyle=`rgba(255,255,255,${s.a})`;hx.fill()});
+    /* orbit trails */
+    orbits.forEach(o=>{
+      hx.beginPath();
+      hx.ellipse(cx,cy,o.r,o.r*.38,0,0,Math.PI*2);
+      hx.strokeStyle=`rgba(77,138,255,${o.alpha*.18})`;
+      hx.lineWidth=.6;hx.stroke();
+    });
+    /* planet */
+    const pg=hx.createRadialGradient(cx-8,cy-8,3,cx,cy,28);
+    pg.addColorStop(0,'#c0d8ff');pg.addColorStop(.35,'#4d8aff');pg.addColorStop(1,'#0b1a50');
+    hx.beginPath();hx.arc(cx,cy,28,0,Math.PI*2);hx.fillStyle=pg;hx.fill();
+    const glow=hx.createRadialGradient(cx,cy,28,cx,cy,90);
+    glow.addColorStop(0,'rgba(77,138,255,.3)');glow.addColorStop(1,'rgba(0,0,0,0)');
+    hx.beginPath();hx.arc(cx,cy,90,0,Math.PI*2);hx.fillStyle=glow;hx.fill();
+    /* satellites */
+    orbits.forEach(o=>{
+      const angle=t*o.speed*1000+o.phase;
+      const sx=cx+o.r*Math.cos(angle),sy=cy+o.r*.38*Math.sin(angle);
+      const sg=hx.createRadialGradient(sx,sy,0,sx,sy,o.size*3);
+      sg.addColorStop(0,o.color+'1)');sg.addColorStop(1,o.color+'0)');
+      hx.beginPath();hx.arc(sx,sy,o.size*3,0,Math.PI*2);hx.fillStyle=sg;hx.fill();
+      hx.beginPath();hx.arc(sx,sy,o.size,0,Math.PI*2);hx.fillStyle='#fff';hx.fill();
+    });
+    t++;requestAnimationFrame(drawHero);
+  }
+  drawHero();
+})();
+
+/* ── ORBIT SIMULATION ── */
+const canvas=document.getElementById('orbitCanvas'),ctx=canvas.getContext('2d');
+function resize(){const W=canvas.parentElement.clientWidth;canvas.width=W;canvas.height=Math.round(W*.52)}
+resize();window.addEventListener('resize',()=>{resize();drawFrame()});
+
+const GM=768000,PLANET_R=22,TRAIL_MAX=900;
+let state={},trail=[],animId=null,crashed=false,escaped=false,simSpeed=3,currentOrbit='none';
+function CX(){return canvas.width/2}function CY(){return canvas.height/2}
+
+function getSliders(){return{vt:parseFloat(document.getElementById('sl-vx').value),vr:parseFloat(document.getElementById('sl-vy').value),r0:parseFloat(document.getElementById('sl-r').value)}}
+function initState(){const s=getSliders();state={x:s.r0,y:0,vx:s.vr,vy:s.vt};trail=[];crashed=false;escaped=false}
+function accel(x,y){const r2=x*x+y*y,r=Math.sqrt(r2),a=-GM/r2;return{ax:a*x/r,ay:a*y/r}}
+function stepVerlet(dt){const{ax:a0x,ay:a0y}=accel(state.x,state.y);const nx=state.x+state.vx*dt+.5*a0x*dt*dt;const ny=state.y+state.vy*dt+.5*a0y*dt*dt;const{ax:a1x,ay:a1y}=accel(nx,ny);state.vx+=.5*(a0x+a1x)*dt;state.vy+=.5*(a0y+a1y)*dt;state.x=nx;state.y=ny}
+function physics(){const r=Math.sqrt(state.x*state.x+state.y*state.y),v2=state.vx*state.vx+state.vy*state.vy;const E=.5*v2-GM/r,L=state.x*state.vy-state.y*state.vx;const eps=Math.sqrt(Math.max(0,1+(2*E*L*L)/(GM*GM)));return{E,L,eps,r}}
+function orbitClass(E,eps){if(crashed)return'crash';if(escaped)return'hyper';if(eps<.04)return'circle';if(E<0)return'ellipse';if(Math.abs(E)<8)return'para';return'hyper'}
+
+const STARS=Array.from({length:180},(_,i)=>({sx:(Math.sin(i*137.508+1)*.5+.5),sy:(Math.cos(i*97.321+2)*.5+.5),r:i%9===0?1.3:i%4===0?.9:.45,a:.12+.5*((i*.31+.5)%1)}));
+function toScreen(x,y){return{sx:CX()+x,sy:CY()-y}}
+
+function drawFrame(){
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const nb=ctx.createRadialGradient(CX(),CY(),0,CX(),CY(),W*.7);
+  nb.addColorStop(0,'rgba(15,24,52,.6)');nb.addColorStop(1,'rgba(4,6,15,0)');
+  ctx.fillStyle=nb;ctx.fillRect(0,0,W,H);
+  STARS.forEach(s=>{ctx.beginPath();ctx.arc(s.sx*W,s.sy*H,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a})`;ctx.fill()});
+
+  const{E}=physics();
+  if(trail.length>1){
+    let tc=E<0?[46,232,160]:[255,207,68];
+    if(crashed)tc=[251,146,60];else if(escaped)tc=[255,79,101];
+    for(let i=1;i<trail.length;i++){
+      const p0=toScreen(trail[i-1].x,trail[i-1].y),p1=toScreen(trail[i].x,trail[i].y);
+      const a=Math.pow(i/trail.length,1.8)*.85;
+      ctx.beginPath();ctx.moveTo(p0.sx,p0.sy);ctx.lineTo(p1.sx,p1.sy);
+      ctx.strokeStyle=`rgba(${tc.join(',')},${a})`;ctx.lineWidth=1.8;ctx.stroke()
+    }
+  }
+
+  ctx.save();ctx.translate(CX(),CY());ctx.scale(1,.26);
+  [{r:PLANET_R*2.4,w:6,a:.09},{r:PLANET_R*3.1,w:4,a:.055},{r:PLANET_R*3.7,w:2.5,a:.035}].forEach(ring=>{
+    ctx.beginPath();ctx.arc(0,0,ring.r,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(77,138,255,${ring.a})`;ctx.lineWidth=ring.w;ctx.stroke()
+  });ctx.restore();
+
+  const gl=ctx.createRadialGradient(CX(),CY(),PLANET_R,CX(),CY(),PLANET_R*5);
+  gl.addColorStop(0,'rgba(77,138,255,.25)');gl.addColorStop(.6,'rgba(40,80,200,.08)');gl.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();ctx.arc(CX(),CY(),PLANET_R*5,0,Math.PI*2);ctx.fillStyle=gl;ctx.fill();
+
+  const pg=ctx.createRadialGradient(CX()-7,CY()-7,2,CX(),CY(),PLANET_R);
+  pg.addColorStop(0,'#c0d8ff');pg.addColorStop(.4,'#4d8aff');pg.addColorStop(1,'#0b1a50');
+  ctx.beginPath();ctx.arc(CX(),CY(),PLANET_R,0,Math.PI*2);ctx.fillStyle=pg;ctx.fill();
+
+  if(!crashed&&!escaped){
+    const{sx,sy}=toScreen(state.x,state.y);
+    const vs=.38;
+    ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+state.vx*vs,sy-state.vy*vs);
+    ctx.strokeStyle='rgba(232,160,48,.3)';ctx.lineWidth=1;ctx.stroke();
+    const sg=ctx.createRadialGradient(sx,sy,0,sx,sy,8);
+    sg.addColorStop(0,'rgba(255,255,255,1)');sg.addColorStop(.3,'rgba(255,210,100,.8)');sg.addColorStop(1,'rgba(232,160,48,0)');
+    ctx.beginPath();ctx.arc(sx,sy,8,0,Math.PI*2);ctx.fillStyle=sg;ctx.fill();
+    ctx.beginPath();ctx.arc(sx,sy,2.5,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  }
+}
+
+/* ── METRIC TWEENS ── */
+const mv={E:0,eps:0,L:0};const mt={E:null,eps:null,L:null};
+function animMetric(elId,key,newVal){
+  if(mt[key])mt[key].kill();
+  const el=document.getElementById(elId);
+  mt[key]=gsap.to(mv,{[key]:newVal,duration:.3,ease:'power2.out',onUpdate:()=>{
+    el.textContent=key==='eps'?mv[key].toFixed(3):key==='L'?Math.abs(mv[key]).toFixed(0):mv[key].toFixed(1)
+  }});
+}
+
+/* ── ORBIT CHANGE ── */
+const OC={circle:'#60a5fa',ellipse:'#2ee8a0',para:'#ffcf44',hyper:'#ff4f65',crash:'#fb923c',none:'#4d8aff'};
+const OL={circle:'Circular',ellipse:'Elíptica',para:'Parabólica',hyper:'Hiperbólica',crash:'Colisión',none:'—'};
+const EDU={
+  circle:{title:'Órbita circular',body:'La velocidad tangencial es exactamente la necesaria para que la fuerza gravitacional actúe como fuerza centrípeta. Distancia constante al planeta.',formula:'v_circ = √(GM/r)   →   r = constante',cond:'E < 0 (ligado)  ·  ε = 0'},
+  ellipse:{title:'Órbita elíptica',body:'El objeto está ligado pero con velocidad diferente a la circular. La distancia varía entre periapsis y apoapsis.',formula:'E = ½v² − GM/r < 0  →  0 < ε < 1',cond:'Energía ligada · Primera ley de Kepler'},
+  para:{title:'Trayectoria parabólica',body:'El objeto tiene exactamente la velocidad de escape — frontera entre órbita ligada y trayectoria libre.',formula:'v_esc = √(2GM/r)  →  E = 0,  ε = 1',cond:'Frontera entre ligado y libre'},
+  hyper:{title:'Trayectoria hiperbólica',body:'Energía superior a la de escape. El objeto es desviado por la gravedad pero no puede ser capturado.',formula:'E > 0  →  ε > 1  →  escape definitivo',cond:'E > 0 · libre para siempre'},
+  crash:{title:'Colisión directa',body:'Momento angular insuficiente: la trayectoria no tiene suficiente curvatura para rodear el planeta.',formula:'L = r × mv → 0  →  impacto',cond:'L pequeño = sin curva orbital'},
+};
+
+let pendingEduAnim=false;
+
+function animOrbitChange(oc){
+  const color=OC[oc]||'#4d8aff';
+  const bdot=document.getElementById('badge-dot');
+  const blbl=document.getElementById('badge-lbl');
+  gsap.killTweensOf(bdot);
+  gsap.to(bdot,{background:color,boxShadow:`0 0 14px ${color}`,duration:.3});
+  gsap.fromTo(bdot,{scale:2,opacity:.3},{scale:1,opacity:1,duration:.6,ease:'elastic.out(1,.45)'});
+  blbl.textContent=OL[oc]||'—';
+
+  /* metric card accent */
+  const{E}=physics();
+  const mbox=document.getElementById('mbox-e');
+  const mval=document.getElementById('m-e');
+  mval.className='mb-val '+(E<0?'neg':'pos');
+  ['mbox-e','mbox-eps','mbox-l'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    el.classList.remove('active');
+    setTimeout(()=>el.classList.add('active'),i*80);
+  });
+
+  /* orbit indicators */
+  ['circle','ellipse','para','hyper'].forEach(t=>{
+    const el=document.getElementById('oi-'+t);if(!el)return;
+    const isA=t===oc;
+    el.classList.toggle('lit',isA);
+    if(isA)gsap.fromTo(el,{x:-8,opacity:.5},{x:0,opacity:1,duration:.35,ease:'power3.out'});
+  });
+
+  /* edu crossfade */
+  const e=EDU[oc];
+  if(e&&!pendingEduAnim){
+    pendingEduAnim=true;
+    const edu=document.getElementById('edu-body');
+    gsap.to(edu,{opacity:0,y:-5,duration:.2,ease:'power2.in',onComplete:()=>{
+      document.getElementById('edu-title').textContent=e.title;
+      document.getElementById('edu-title').style.color=color;
+      document.getElementById('edu-txt').textContent=e.body;
+      document.getElementById('edu-formula').textContent=e.formula;
+      document.getElementById('edu-cond').textContent=e.cond;
+      gsap.to(edu,{opacity:1,y:0,duration:.3,ease:'power2.out',onComplete:()=>{pendingEduAnim=false}});
+    }});
+  }
+
+  /* status overlay */
+  const ov=document.getElementById('status-overlay');
+  const sm=document.getElementById('status-msg');
+  if(oc==='crash'||oc==='hyper'){
+    const c=oc==='crash';
+    sm.textContent=c?'💥 Colisión con el planeta':'∞ Escape — trayectoria hiperbólica';
+    sm.style.color=c?'#fb923c':'#ff4f65';
+    sm.style.borderColor=c?'rgba(251,146,60,.4)':'rgba(255,79,101,.4)';
+    gsap.to(ov,{opacity:1,duration:.4,ease:'power2.out'});
+  } else {
+    gsap.to(ov,{opacity:0,duration:.3});
+  }
+}
+
+function updateUI(){
+  const{E,L,eps}=physics();
+  const oc=orbitClass(E,eps);
+  animMetric('m-e','E',E);
+  animMetric('m-eps','eps',eps);
+  animMetric('m-l','L',L);
+  if(oc!==currentOrbit){currentOrbit=oc;animOrbitChange(oc)}
+}
+
+function loop(){
+  if(!crashed&&!escaped){
+    const DT=.05,steps=Math.min(Math.pow(2,simSpeed-1),24),te=Math.max(1,Math.floor(steps/5));
+    for(let i=0;i<steps;i++){
+      stepVerlet(DT);
+      const r=Math.sqrt(state.x*state.x+state.y*state.y);
+      if(r<PLANET_R+4){crashed=true;break}
+      if(r>canvas.width){escaped=true;break}
+      if(i%te===0){trail.push({x:state.x,y:state.y});if(trail.length>TRAIL_MAX)trail.shift()}
+    }
+  }
+  drawFrame();updateUI();
+  animId=requestAnimationFrame(loop);
+}
+
+function resetSim(){
+  if(animId)cancelAnimationFrame(animId);
+  currentOrbit='none';pendingEduAnim=false;
+  gsap.to(document.getElementById('status-overlay'),{opacity:0,duration:.2});
+  gsap.fromTo('#resetBtn',{scale:.94},{scale:1,duration:.5,ease:'elastic.out(1,.5)'});
+  initState();loop();
+}
+
+['vx','vy','r'].forEach(id=>{
+  document.getElementById('sl-'+id).addEventListener('input',function(){
+    const lbl=document.getElementById('lbl-'+id);
+    lbl.textContent=this.value;
+    gsap.fromTo(lbl,{scale:1.2,color:'#fff'},{scale:1,color:'',duration:.35,ease:'power2.out'});
+    document.querySelectorAll('.pre-row').forEach(b=>b.classList.remove('on'));
+    resetSim();
+  });
+});
+
+function setSpeed(s){
+  simSpeed=s;
+  document.querySelectorAll('.spd').forEach(b=>{
+    const a=parseInt(b.dataset.s)===s;b.classList.toggle('on',a);
+    if(a)gsap.fromTo(b,{scale:.85},{scale:1,duration:.4,ease:'elastic.out(1,.5)'});
+  });
+}
+
+const PRESETS={circle:{vx:80,vy:0,r:120},ellipse:{vx:55,vy:0,r:120},para:{vx:113,vy:0,r:120},hyper:{vx:140,vy:0,r:120},crash:{vx:30,vy:-40,r:110}};
+function setPreset(t){
+  const p=PRESETS[t];
+  document.getElementById('sl-vx').value=p.vx;document.getElementById('lbl-vx').textContent=p.vx;
+  document.getElementById('sl-vy').value=p.vy;document.getElementById('lbl-vy').textContent=p.vy;
+  document.getElementById('sl-r').value=p.r;document.getElementById('lbl-r').textContent=p.r;
+  document.querySelectorAll('.pre-row').forEach(b=>b.classList.remove('on'));
+  const btn=document.getElementById('pre-'+t);
+  if(btn){btn.classList.add('on');gsap.fromTo(btn,{x:-6,opacity:.7},{x:0,opacity:1,duration:.35,ease:'power3.out'})}
+  resetSim();
+}
+
+/* ── GSAP ENTRANCE ── */
+gsap.registerPlugin(ScrollTrigger);
+
+window.addEventListener('load',()=>{
+  const tl=gsap.timeline({defaults:{ease:'power3.out'}});
+
+  /* Nav */
+  tl.to('#navLogo',{opacity:1,y:0,duration:.6},0)
+    .to('#navLinks',{opacity:1,y:0,duration:.6},0.1)
+    .to('#navCta',{opacity:1,duration:.5},0.2)
+
+  /* Hero eyebrow */
+    .to('#heroEyebrow',{opacity:1,duration:.6},0.3)
+
+  /* Hero title lines */
+    .to('.hero-title-inner',{y:'0%',duration:1.1,ease:'expo.out',stagger:.12},0.5)
+
+  /* Hero sub */
+    .to('#heroSub',{opacity:1,y:0,duration:.7},1.0)
+
+  /* Scroll hint */
+    .to('#heroScroll',{opacity:1,duration:.5},1.3);
+
+  /* Stats — scroll triggered */
+  gsap.utils.toArray('.stat-num-inner').forEach((el,i)=>{
+    ScrollTrigger.create({trigger:'#stats',start:'top 80%',once:true,onEnter:()=>{
+      gsap.to(el,{y:'0%',duration:.9,delay:i*.12,ease:'expo.out'});
+    }});
+  });
+
+  /* Theory cards */
+  gsap.utils.toArray('.tf').forEach((el,i)=>{
+    gsap.from(el,{scrollTrigger:{trigger:el,start:'top 85%',once:true},x:-30,opacity:0,duration:.6,delay:i*.1,ease:'power3.out'});
+  });
+
+  gsap.utils.toArray('.ot-card').forEach((el,i)=>{
+    gsap.from(el,{scrollTrigger:{trigger:el,start:'top 85%',once:true},y:24,opacity:0,duration:.5,delay:i*.08,ease:'power3.out'});
+  });
+
+  /* Lab section header */
+  gsap.from('.lab-header',{scrollTrigger:{trigger:'#lab',start:'top 75%',once:true},y:30,opacity:0,duration:.8,ease:'power3.out'});
+
+  /* Sim layout */
+  gsap.from('.sim-layout',{scrollTrigger:{trigger:'.sim-layout',start:'top 80%',once:true},y:40,opacity:0,duration:.9,ease:'power3.out'});
+
+  /* Footer team cards */
+  gsap.from('.team-card',{scrollTrigger:{trigger:'footer',start:'top 90%',once:true},y:16,opacity:0,duration:.4,stagger:.06,ease:'power2.out'});
+});
+
+/* Nav shrink on scroll */
+ScrollTrigger.create({start:'top -80',end:99999,toggleClass:{targets:'nav',className:'scrolled'}});
+
+/* ── GLOSSARY FILTER ── */
+document.querySelectorAll('.gf-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.gf-btn').forEach(b=>b.classList.remove('on'));
+    this.classList.add('on');
+    const cat=this.dataset.cat;
+    const cards=document.querySelectorAll('.g-card');
+    cards.forEach(c=>{
+      const show=cat==='all'||c.dataset.cat===cat;
+      c.classList.toggle('hidden',!show);
+    });
+    const visible=[...cards].filter(c=>!c.classList.contains('hidden'));
+    gsap.fromTo(visible,{opacity:0,y:10},{opacity:1,y:0,duration:.3,stagger:.04,ease:'power2.out'});
+  });
+});
+
+gsap.from('.g-card',{scrollTrigger:{trigger:'#glossaryWrap',start:'top 88%',once:true},opacity:0,y:16,duration:.4,stagger:.04,ease:'power2.out'});
+
+initState();loop();
+</script>
+</body>
+</html>
