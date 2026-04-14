@@ -688,8 +688,8 @@ footer{
       <div class="cp-section">
         <div class="cp-label">Velocidad de simulación</div>
         <div class="speed-grid">
-          <button class="spd" data-s="1" onclick="setSpeed(1)">1×</button>
-          <button class="spd on" data-s="3" onclick="setSpeed(3)">3×</button>
+          <button class="spd on" data-s="1" onclick="setSpeed(1)">1×</button>
+          <button class="spd" data-s="3" onclick="setSpeed(3)">3×</button>
           <button class="spd" data-s="5" onclick="setSpeed(5)">5×</button>
           <button class="spd" data-s="8" onclick="setSpeed(8)">8×</button>
         </div>
@@ -839,7 +839,7 @@ function resize(){
 resize();window.addEventListener('resize',()=>{resize();drawFrame()});
 
 const GM=768000,PLANET_R=22,TRAIL_MAX=900;
-let state={},trail=[],animId=null,crashed=false,escaped=false,simSpeed=3,currentOrbit='none';
+let state={},trail=[],animId=null,crashed=false,escaped=false,simSpeed=1,currentOrbit='none';
 function CX(){return canvas.width/2}function CY(){return canvas.height/2}
 
 function getSliders(){return{vt:parseFloat(document.getElementById('sl-vx').value),vr:parseFloat(document.getElementById('sl-vy').value),r0:parseFloat(document.getElementById('sl-r').value)}}
